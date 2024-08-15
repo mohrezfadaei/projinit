@@ -62,4 +62,8 @@ func initPrject(cmd *cobra.Command, args []string) {
 	if !noGitIgnore {
 		project.CreateGitignoreFile(lang, projectPath)
 	}
+
+	if !noReadme {
+		project.CreateReadmeFile(projectPath)
+	}
 }
