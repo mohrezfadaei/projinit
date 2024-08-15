@@ -11,15 +11,15 @@ import (
 )
 
 var (
-	projectName string
-	gitInit     bool
-	noLicense   bool
-	licenseType string
-	noGitIgnore bool
-	noReadme    bool
-	gitUserName string
-	gitEmail    string
-	year        int
+	projectName  string
+	gitInit      bool
+	noLicense    bool
+	licenseType  string
+	noGitIgnore  bool
+	noReadme     bool
+	gitUserName  string
+	gitUserEmail string
+	year         int
 )
 
 func init() {
@@ -37,7 +37,7 @@ func init() {
 	initCmd.Flags().BoolVar(&noGitIgnore, "no-gitignore", false, "Don't create .gitignore file")
 	initCmd.Flags().BoolVar(&noReadme, "no-readme", false, "Don't create README file")
 	initCmd.Flags().StringVar(&gitUserName, "user.name", "", "Git commiter name")
-	initCmd.Flags().StringVar(&gitEmail, "user.email", "", "Git commiter email")
+	initCmd.Flags().StringVar(&gitUserEmail, "user.email", "", "Git commiter email")
 	initCmd.Flags().IntVar(&year, "year", time.Now().Year(), "Year for license (default: current year)")
 	initCmd.MarkFlagRequired("name")
 
@@ -56,7 +56,7 @@ func initPrject(cmd *cobra.Command, args []string) {
 	projectPath := filepath.Join(".", projectName)
 
 	if !noLicense && licenseType != "" {
-		project.CreateLicenseFile(licenseType, projectPath, year, gitUserName, gitEmail)
+		project.CreateLicenseFile(licenseType, projectPath, year, gitUserName, gitUserEmail)
 	}
 
 	if !noGitIgnore {
@@ -65,5 +65,9 @@ func initPrject(cmd *cobra.Command, args []string) {
 
 	if !noReadme {
 		project.CreateReadmeFile(projectPath)
+	}
+
+	if gitInit {
+		project.RunGitInit(projectPath, gitUserName, gitUserEmail)
 	}
 }
