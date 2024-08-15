@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mohrezfadaei/projinit/internal/config"
+	"github.com/mohrezfadaei/projinit/config"
 	"github.com/mohrezfadaei/projinit/internal/utils"
 )
 

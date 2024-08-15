@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/mohrezfadaei/projinit/internal/config"
+	"github.com/mohrezfadaei/projinit/config"
 	"github.com/mohrezfadaei/projinit/internal/utils"
 )
 

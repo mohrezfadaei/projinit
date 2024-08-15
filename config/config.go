@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	_ "embed"
+
 	"gopkg.in/yaml.v2"
 )
 
+//go:embed config.yaml
+var embeddedConfig []byte
 var Config Configuration
 
 type Configuration struct {
@@ -15,13 +19,7 @@ type Configuration struct {
 }
 
 func LoadConfig(path string) {
-	file, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Printf("Error reading config file: %v\n", err)
-		os.Exit(1)
-	}
-
-	err = yaml.Unmarshal(file, &Config)
+	err := yaml.Unmarshal(embeddedConfig, &Config)
 	if err != nil {
 		fmt.Printf("Error parsing config file: %v\n", err)
 		os.Exit(1)

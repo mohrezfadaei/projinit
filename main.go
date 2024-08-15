@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/mohrezfadaei/projinit/cmd"
-	"github.com/mohrezfadaei/projinit/internal/config"
+	"github.com/mohrezfadaei/projinit/config"
 )
 
 func main() {
