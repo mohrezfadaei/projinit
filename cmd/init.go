@@ -45,6 +45,8 @@ func init() {
 }
 
 func initPrject(cmd *cobra.Command, args []string) {
+	lang := args[0]
+
 	err := os.Mkdir(projectName, 0755)
 	if err != nil {
 		fmt.Printf("Error creating project directory: %v\n", err)
@@ -55,5 +57,9 @@ func initPrject(cmd *cobra.Command, args []string) {
 
 	if !noLicense && licenseType != "" {
 		project.CreateLicenseFile(licenseType, projectPath, year, gitUserName, gitEmail)
+	}
+
+	if !noGitIgnore {
+		project.CreateGitignoreFile(lang, projectPath)
 	}
 }
