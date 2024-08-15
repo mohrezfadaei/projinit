@@ -1,6 +1,14 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/mohrezfadaei/projinit/internal/project"
+	"github.com/spf13/cobra"
+)
 
 var (
 	projectName string
@@ -11,6 +19,7 @@ var (
 	noReadme    bool
 	gitUserName string
 	gitEmail    string
+	year        int
 )
 
 func init() {
@@ -29,10 +38,22 @@ func init() {
 	initCmd.Flags().BoolVar(&noReadme, "no-readme", false, "Don't create README file")
 	initCmd.Flags().StringVar(&gitUserName, "user.name", "", "Git commiter name")
 	initCmd.Flags().StringVar(&gitEmail, "user.email", "", "Git commiter email")
+	initCmd.Flags().IntVar(&year, "year", time.Now().Year(), "Year for license (default: current year)")
 	initCmd.MarkFlagRequired("name")
 
 	rootCmd.AddCommand(initCmd)
 }
 
 func initPrject(cmd *cobra.Command, args []string) {
+	err := os.Mkdir(projectName, 0755)
+	if err != nil {
+		fmt.Printf("Error creating project directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	projectPath := filepath.Join(".", projectName)
+
+	if !noLicense && licenseType != "" {
+		project.CreateLicenseFile(licenseType, projectPath, year, gitUserName, gitEmail)
+	}
 }
