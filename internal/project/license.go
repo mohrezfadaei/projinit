@@ -2,32 +2,25 @@ package project
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/mohrezfadaei/projinit/internal/config"
+	"github.com/mohrezfadaei/projinit/internal/utils"
 )
 
 func CreateLicenseFile(licenseType, projectPath string, year int, username, email string) {
+	licenseFilePath := filepath.Join("public", "licenses", fmt.Sprintf("%s.licenses", licenseType))
 	licenseURL, ok := config.Config.Licenses[licenseType]
 	if !ok {
 		fmt.Printf("Unsupported license type: %s\n", licenseType)
 		os.Exit(1)
 	}
 
-	resp, err := http.Get(licenseURL)
+	body, err := utils.FetchResource(licenseFilePath, licenseURL)
 	if err != nil {
-		fmt.Printf("Error downloading LICENSE file: %v\n", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading LICENSE file: %v\n", err)
+		fmt.Printf("Error fetching LICENSE file: %v\n", err)
 		os.Exit(1)
 	}
 

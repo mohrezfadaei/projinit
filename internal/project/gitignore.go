@@ -2,31 +2,24 @@ package project
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/mohrezfadaei/projinit/internal/config"
+	"github.com/mohrezfadaei/projinit/internal/utils"
 )
 
 func CreateGitignoreFile(lang, projectPath string) {
+	gitignoreFilePath := filepath.Join("public", "gitignores", fmt.Sprintf("%s.gitignore", lang))
 	gitignoreURL, ok := config.Config.Gitignores[lang]
 	if !ok {
 		fmt.Printf("Unsupported language or tool: %s\n", lang)
 		os.Exit(1)
 	}
 
-	resp, err := http.Get(gitignoreURL)
+	gitignoreContent, err := utils.FetchResource(gitignoreFilePath, gitignoreURL)
 	if err != nil {
-		fmt.Printf("Error downloading .gitignore file: %v\n", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading .gitignore file: %v\n", err)
+		fmt.Printf("Error fetching .gitignore file: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -38,7 +31,7 @@ func CreateGitignoreFile(lang, projectPath string) {
 	}
 	defer file.Close()
 
-	_, err = file.Write(body)
+	_, err = file.Write(gitignoreContent)
 	if err != nil {
 		fmt.Printf("Error writing to .gitignore file: %v\n", err)
 		os.Exit(1)
