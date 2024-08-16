@@ -34,9 +34,6 @@ var findCmd = &cobra.Command{
 func init() {
 	findCmd.Flags().StringVar(&findName, "name", "", "Search by name")
 	findCmd.Flags().IntVar(&findID, "id", 0, "Search by ID")
-
-	// Register the find command
-	rootCmd.AddCommand(findCmd)
 }
 
 func findLicense() {

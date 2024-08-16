@@ -88,6 +88,4 @@ func init() {
 	initCmd.Flags().StringVar(&projectName, "name", "ProjectName", "Project name")
 	initCmd.Flags().BoolVar(&noReadme, "no-readme", false, "Don't create README.md")
 	initCmd.Flags().StringVar(&lang, "lang", "Go", "Programming language for .gitignore")
-
-	rootCmd.AddCommand(initCmd)
 }

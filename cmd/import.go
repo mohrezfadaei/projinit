@@ -34,8 +34,6 @@ func init() {
 	importCmd.Flags().StringVarP(&importType, "type", "t", "", "Type of license (required for license)")
 	importCmd.Flags().StringVarP(&importPath, "path", "p", "", "Path or URL to import from")
 	importCmd.Flags().StringVarP(&lang, "language", "l", "", "Language or tool for license (e.g., go, python, react, etc.)")
-
-	rootCmd.AddCommand(importCmd)
 }
 
 func importLicense() {

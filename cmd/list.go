@@ -28,10 +28,6 @@ var listCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(listCmd)
-}
-
 func listLicenses() {
 	licenseService := services.NewLicenseService()
 	licenses, err := licenseService.ListLicenses()

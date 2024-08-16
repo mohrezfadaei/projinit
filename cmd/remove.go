@@ -32,7 +32,4 @@ var removeCmd = &cobra.Command{
 func init() {
 	removeCmd.Flags().StringVar(&removeName, "name", "", "Remove by name")
 	removeCmd.Flags().IntVar(&removeID, "id", 0, "Remove by ID")
-
-	// Register the remove command
-	rootCmd.AddCommand(removeCmd)
 }
