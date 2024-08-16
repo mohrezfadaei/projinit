@@ -62,3 +62,22 @@ func (gs *GitignoreService) fetchContent(path string) (string, error) {
 	}
 	return string(content), nil
 }
+
+func (gs *GitignoreService) ListGitignores() ([]db.Gitignore, error) {
+	rows, err := db.DB.Query("SELECT id, lang FROM gitignores")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var gitignores []db.Gitignore
+	for rows.Next() {
+		var gitignore db.Gitignore
+		if err := rows.Scan(&gitignore.ID, &gitignore.Language); err != nil {
+			return nil, err
+		}
+		gitignores = append(gitignores, gitignore)
+	}
+
+	return gitignores, nil
+}

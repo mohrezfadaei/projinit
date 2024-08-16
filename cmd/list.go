@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/mohrezfadaei/projinit/internal/services"
 	"github.com/spf13/cobra"
 )
 
@@ -15,11 +16,12 @@ var listCmd = &cobra.Command{
 
 		switch resourceType {
 		case "license":
-			// not implemented yet
+			listLicenses()
 		case "gitignore":
-			// not implemented yet
+			listGitignores()
 		case "all":
-			// not implemented yet
+			listLicenses()
+			listGitignores()
 		default:
 			fmt.Println("Error: Invalid type. Use 'license', 'gitignore', or 'all'.")
 		}
@@ -28,4 +30,42 @@ var listCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+}
+
+func listLicenses() {
+	licenseService := services.NewLicenseService()
+	licenses, err := licenseService.ListLicenses()
+	if err != nil {
+		fmt.Println("Error listing licenses:", err)
+		return
+	}
+
+	if len(licenses) == 0 {
+		fmt.Println("No licenses found.")
+		return
+	}
+
+	fmt.Println("Available Licenses:")
+	for _, license := range licenses {
+		fmt.Printf("- %s (ID: %d)\n", license.Type, license.ID)
+	}
+}
+
+func listGitignores() {
+	gitignoreService := services.NewGitignoreService()
+	gitignores, err := gitignoreService.ListGitignores()
+	if err != nil {
+		fmt.Println("Error listing gitignores:", err)
+		return
+	}
+
+	if len(gitignores) == 0 {
+		fmt.Println("No gitignore templates found.")
+		return
+	}
+
+	fmt.Println("Available .gitignore Templates:")
+	for _, gitignore := range gitignores {
+		fmt.Printf("- %s (ID: %d)\n", gitignore.Language, gitignore.ID)
+	}
 }

@@ -83,3 +83,22 @@ func (ls *LicenseService) fetchContent(path string) (string, error) {
 	}
 	return string(content), nil
 }
+
+func (ls *LicenseService) ListLicenses() ([]db.License, error) {
+	rows, err := db.DB.Query("SELECT id, type FROM licenses")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var licenses []db.License
+	for rows.Next() {
+		var license db.License
+		if err := rows.Scan(&license.ID, &license.Type); err != nil {
+			return nil, err
+		}
+		licenses = append(licenses, license)
+	}
+
+	return licenses, nil
+}
