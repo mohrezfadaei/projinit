@@ -95,7 +95,6 @@ func (gs *GitignoreService) FindGitignoreByID(id int) (*Gitignore, error) {
 		return nil, err
 	}
 
-	// Convert db.Gitignore to services.Gitignore
 	return &Gitignore{
 		ID:       gitignore.ID,
 		Language: gitignore.Language,
@@ -116,4 +115,14 @@ func (gs *GitignoreService) FindGitignoreByName(name string) (*Gitignore, error)
 		Language: gitignore.Language,
 		Content:  gitignore.Content,
 	}, nil
+}
+
+func (gs *GitignoreService) RemoveGitignoreByID(id int) error {
+	_, err := db.DB.Exec("DELETE FROM gitignores WHERE id = ?", id)
+	return err
+}
+
+func (gs *GitignoreService) RemoveGitignoreByName(name string) error {
+	_, err := db.DB.Exec("DELETE FROM gitignores WHERE lang = ?", name)
+	return err
 }

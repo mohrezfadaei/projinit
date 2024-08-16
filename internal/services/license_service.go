@@ -136,3 +136,13 @@ func (ls *LicenseService) FindLicenseByName(name string) (*License, error) {
 		Content: license.Content,
 	}, nil
 }
+
+func (ls *LicenseService) RemoveLicenseByID(id int) error {
+	_, err := db.DB.Exec("DELETE FROM licenses WHERE id = ?", id)
+	return err
+}
+
+func (ls *LicenseService) RemoveLicenseByName(name string) error {
+	_, err := db.DB.Exec("DELETE FROM licenses WHERE type = ?", name)
+	return err
+}
