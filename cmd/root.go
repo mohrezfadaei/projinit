@@ -1,6 +1,10 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"os"
+
+	"github.com/spf13/cobra"
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "projinit",
@@ -9,6 +13,12 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		os.Exit(1)
 	}
+}
+
+func init() {
+	// Register subcommands here
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(importCmd)
 }
