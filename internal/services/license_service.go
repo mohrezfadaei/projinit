@@ -11,6 +11,12 @@ import (
 	"github.com/mohrezfadaei/projinit/internal/db"
 )
 
+type License struct {
+	ID      int
+	Type    string
+	Content string
+}
+
 type LicenseService struct{}
 
 func NewLicenseService() *LicenseService {
@@ -101,4 +107,32 @@ func (ls *LicenseService) ListLicenses() ([]db.License, error) {
 	}
 
 	return licenses, nil
+}
+
+func (ls *LicenseService) FindLicenseByID(id int) (*License, error) {
+	var license db.License
+	err := db.DB.QueryRow("SELECT id, type, content FROM licenses WHERE id = ?", id).Scan(&license.ID, &license.Type, &license.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	return &License{
+		ID:      license.ID,
+		Type:    license.Type,
+		Content: license.Content,
+	}, nil
+}
+
+func (ls *LicenseService) FindLicenseByName(name string) (*License, error) {
+	var license db.License
+	err := db.DB.QueryRow("SELECT id, type, content FROM licenses WHERE type = ?", name).Scan(&license.ID, &license.Type, &license.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	return &License{
+		ID:      license.ID,
+		Type:    license.Type,
+		Content: license.Content,
+	}, nil
 }

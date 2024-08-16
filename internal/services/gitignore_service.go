@@ -10,6 +10,12 @@ import (
 	"github.com/mohrezfadaei/projinit/internal/db"
 )
 
+type Gitignore struct {
+	ID       int
+	Language string
+	Content  string
+}
+
 type GitignoreService struct{}
 
 func NewGitignoreService() *GitignoreService {
@@ -80,4 +86,34 @@ func (gs *GitignoreService) ListGitignores() ([]db.Gitignore, error) {
 	}
 
 	return gitignores, nil
+}
+
+func (gs *GitignoreService) FindGitignoreByID(id int) (*Gitignore, error) {
+	var gitignore db.Gitignore
+	err := db.DB.QueryRow("SELECT id, lang, content FROM gitignores WHERE id = ?", id).Scan(&gitignore.ID, &gitignore.Language, &gitignore.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert db.Gitignore to services.Gitignore
+	return &Gitignore{
+		ID:       gitignore.ID,
+		Language: gitignore.Language,
+		Content:  gitignore.Content,
+	}, nil
+}
+
+func (gs *GitignoreService) FindGitignoreByName(name string) (*Gitignore, error) {
+	var gitignore db.Gitignore
+	err := db.DB.QueryRow("SELECT id, lang, content FROM gitignores WHERE lang = ?", name).Scan(&gitignore.ID, &gitignore.Language, &gitignore.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert db.Gitignore to services.Gitignore
+	return &Gitignore{
+		ID:       gitignore.ID,
+		Language: gitignore.Language,
+		Content:  gitignore.Content,
+	}, nil
 }
