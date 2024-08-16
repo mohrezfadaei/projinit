@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/mohrezfadaei/projinit/internal/services"
 	"github.com/spf13/cobra"
 )
 
 var (
 	importType string
+	importPath string
 	lang       string
-	path       string
 )
 
 var importCmd = &cobra.Command{
@@ -20,19 +21,51 @@ var importCmd = &cobra.Command{
 		resourceType := args[0]
 		switch resourceType {
 		case "license":
+			importLicense()
 		case "gitignore":
+			importGitignore()
 		default:
-			fmt.Println("Invalid type. Use 'license' or 'gitignore'.")
+			fmt.Println("Error: Invalid type. Use 'license' or 'gitignore'.")
 		}
 	},
 }
 
 func init() {
 	importCmd.Flags().StringVarP(&importType, "type", "t", "", "Type of license (required for license)")
+	importCmd.Flags().StringVarP(&importPath, "path", "p", "", "Path or URL to import from")
 	importCmd.Flags().StringVarP(&lang, "language", "l", "", "Language or tool for license (e.g., go, python, react, etc.)")
-	importCmd.Flags().StringVarP(&path, "path", "p", "", "Path or URL to import from")
+
+	rootCmd.AddCommand(importCmd)
 }
 
-func importLicense() {}
+func importLicense() {
+	if importType == "" || importPath == "" {
+		fmt.Println("Error: Both -type and -path are required for license import.")
+		return
+	}
 
-func importGitignore() {}
+	licenseService := services.NewLicenseService()
+	err := licenseService.ImportLicense(importType, importPath)
+	if err != nil {
+		fmt.Printf("Error importing license: %v\n", err)
+		return
+	}
+
+	fmt.Println("License imported successfully.")
+}
+
+func importGitignore() {
+	if lang == "" || importPath == "" {
+		fmt.Println("Error: Both -language and -path are required for gitignore import.")
+		return
+	}
+
+	gitignoreService := services.NewGitignoreService()
+	err := gitignoreService.ImportGitignore(lang, importPath)
+	if err != nil {
+		fmt.Printf("Error importing gitignore: %v\n", err)
+		return
+	}
+
+	fmt.Println("Gitignore imported successfully.")
+}

@@ -3,6 +3,9 @@ package services
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"text/template"
 
 	"github.com/mohrezfadaei/projinit/internal/db"
@@ -45,4 +48,38 @@ func (ls *LicenseService) GenerateLicenseContent(
 	}
 
 	return renderedContent.String(), nil
+}
+
+func (ls *LicenseService) ImportLicense(licenseType, path string) error {
+	content, err := ls.fetchContent(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.DB.Exec("INSERT INTO licenses (type, content) VALUES (?, ?)", licenseType, content)
+	if err != nil {
+		return fmt.Errorf("error inserting license into database: %w", err)
+	}
+	return nil
+}
+
+func (ls *LicenseService) fetchContent(path string) (string, error) {
+	if path[:4] == "http" {
+		resp, err := http.Get(path)
+		if err != nil {
+			return "", fmt.Errorf("error fetching from URL: %w", err)
+		}
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("error reading response body: %w", err)
+		}
+		return string(body), nil
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("error reading file: %w", err)
+	}
+	return string(content), nil
 }
