@@ -18,7 +18,7 @@ func Execute() {
 }
 
 func init() {
-	// Register subcommands here
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(listCmd)
 }
