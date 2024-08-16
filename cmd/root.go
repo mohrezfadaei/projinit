@@ -21,4 +21,5 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(findCmd)
 }
