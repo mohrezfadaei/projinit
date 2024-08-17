@@ -2,21 +2,20 @@
 APP_NAME := projinit
 VERSION := 1.0.0
 MAINTAINER := Mohammad Reza Fadaei <mohrezfadaei@gmail.com>
-DESCRIPTION := A CLI tool to initialize projects with LICENSE, README.md, and .gitignore files.
+DESCRIPTION := Initialize git projects using command lines.
 
 BIN_DIR := build/bin
 DEB_DIR := build/deb
 RPM_DIR := build/rpm
 BUILD_DIR := build
 
-# Architectures and platforms
 ARCHITECTURES := amd64 arm64
 PLATFORMS := linux windows darwin
 
 # Mapping between Go architectures and RPM architectures
-RPM_ARCH_MAP := $(if $(filter $*,amd64),x86_64,$(if $(filter $*,arm64),aarch64,$*))
+RPM_ARCH_MAP := $(if $(filter $(GOARCH),amd64),x86_64,$(if $(filter $(GOARCH),arm64),aarch64,$(GOARCH)))
 
-# Build all binaries
+# Build targets
 build: $(foreach arch, $(ARCHITECTURES), $(foreach plat, $(PLATFORMS), build-$(plat)-$(arch)))
 
 build-linux: $(foreach arch, $(ARCHITECTURES), build-linux-$(arch))
@@ -28,12 +27,17 @@ build-all: build-linux build-windows build-macos
 # Build binaries for specific platforms and architectures
 build-%:
 	@echo "Building $(APP_NAME) for GOOS=$(word 1,$(subst -, ,$*)) and GOARCH=$(word 2,$(subst -, ,$*))"
-	GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) go build -o $(BIN_DIR)/$(APP_NAME)-$(word 1,$(subst -, ,$*))-$(word 2,$(subst -, ,$*)) main.go
+	@mkdir -p $(BIN_DIR)
+	@if [ "$(word 1,$(subst -, ,$*))" = "windows" ]; then \
+		GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) go build -o $(BIN_DIR)/$(APP_NAME)-$(word 1,$(subst -, ,$*))-$(word 2,$(subst -, ,$*)).exe main.go; \
+	else \
+		GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) go build -o $(BIN_DIR)/$(APP_NAME)-$(word 1,$(subst -, ,$*))-$(word 2,$(subst -, ,$*)) main.go; \
+	fi
 
 # Package .deb for specific architectures
 package-deb: $(foreach arch, $(ARCHITECTURES), package-deb-$(arch))
 
-package-deb-%: build-linux-%
+package-deb-%: build-linux-% 
 	@echo "Packaging $(APP_NAME) for architecture $*"
 	$(eval DEB_PACKAGE := $(DEB_DIR)/$*/$(APP_NAME))
 	$(eval BIN_PATH := $(BIN_DIR)/$(APP_NAME)-linux-$*)
@@ -56,18 +60,18 @@ package-deb-%: build-linux-%
 
 	# Build the .deb package
 	dpkg-deb --build $(DEB_PACKAGE)
-	mv $(DEB_PACKAGE).deb $(BUILD_DIR)/$(APP_NAME)-$*.deb
+	mv $(DEB_PACKAGE).deb $(BIN_DIR)/$(APP_NAME)-$*.deb
 
 # Package .rpm for specific architectures
 package-rpm: $(foreach arch, $(ARCHITECTURES), package-rpm-$(arch))
 
-package-rpm-%: build-linux-%
-	@echo "Packaging $(APP_NAME) for architecture $*"
-	$(eval RPM_PACKAGE := $(RPM_DIR)/$*/$(APP_NAME))
-	$(eval BIN_PATH := $(BIN_DIR)/$(APP_NAME)-linux-$*)
-	$(eval RPM_ARCH := $(if $(filter $*,amd64),x86_64,$(if $(filter $*,arm64),aarch64,$*)))
+package-rpm-%: build-linux-% 
+	@echo "Packaging $(APP_NAME) for architecture $(GOARCH)"
+	$(eval BIN_PATH := $(BIN_DIR)/$(APP_NAME)-linux-$(GOARCH))
+	$(eval RPM_ARCH := $(RPM_ARCH_MAP))
+	$(eval RPM_PACKAGE := $(RPM_DIR)/$(RPM_ARCH)/$(APP_NAME))
 
-	@echo "Using RPM_ARCH=$(RPM_ARCH) for architecture $*"
+	@echo "Using RPM_ARCH=$(RPM_ARCH) for architecture $(GOARCH)"
 
 	mkdir -p $(RPM_PACKAGE)/BUILD
 	mkdir -p $(RPM_PACKAGE)/RPMS/$(RPM_ARCH)
@@ -80,35 +84,51 @@ package-rpm-%: build-linux-%
 	cp $(BIN_PATH) $(RPM_PACKAGE)/tmp/$(APP_NAME)-$(VERSION)/$(APP_NAME)
 	tar czvf $(RPM_PACKAGE)/SOURCES/$(APP_NAME)-$(VERSION).tar.gz -C $(RPM_PACKAGE)/tmp $(APP_NAME)-$(VERSION)
 
-	# Create the spec file
-	echo "Name: $(APP_NAME)" > $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "Version: $(VERSION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "Release: 1%{?dist}" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "Summary: $(DESCRIPTION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "License: MIT" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "URL: https://example.com/$(APP_NAME)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "Source0: $(APP_NAME)-$(VERSION).tar.gz" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "BuildArch: $(RPM_ARCH)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	# Create the spec file based on the template
+	echo "Name:           $(APP_NAME)" > $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "Version:        $(VERSION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "Release:        1%{?dist}" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "Summary:        $(DESCRIPTION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "Group:          Development/Tools" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "License:        Apache 2.0" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "URL:            https://github.com/mohrezfadaei/projinit" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "Source0:        %{name}-%{version}.tar.gz" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%description" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "$(DESCRIPTION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%prep" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%setup -q" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%build" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "# Nothing to build, Go binary is pre-built" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%install" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "install -D -m 0755 $(APP_NAME) %{buildroot}/usr/local/bin/$(APP_NAME)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "install -D -m 0755 $(APP_NAME) %{buildroot}/usr/bin/$(APP_NAME)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "# Prevent `strip` from running" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "%global __strip /bin/true" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%files" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "/usr/local/bin/$(APP_NAME)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "/usr/bin/$(APP_NAME)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "%changelog" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	echo "* $(shell LC_TIME=C date '+%a %b %d %Y') $(MAINTAINER) - $(VERSION)-1" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	echo "* Fri Aug 16 2024 $(MAINTAINER) - $(VERSION)" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 	echo "- Initial RPM release" >> $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
 
 	# Build the .rpm package
-	rpmbuild --define "_topdir $(abspath $(RPM_PACKAGE))" -bb $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
-	mv $(RPM_PACKAGE)/RPMS/$(RPM_ARCH)/$(APP_NAME)-$(VERSION)-1.$(RPM_ARCH).rpm $(BUILD_DIR)/$(APP_NAME)-$*.rpm
+	rpmbuild --define "_topdir $(abspath $(RPM_PACKAGE))" -ba --target $(RPM_ARCH) $(RPM_PACKAGE)/SPECS/$(APP_NAME).spec
+	mv $(RPM_PACKAGE)/RPMS/$(RPM_ARCH)/$(APP_NAME)-$(VERSION)-1.$(RPM_ARCH).rpm $(BIN_DIR)/$(APP_NAME)-$*.rpm
 
-# Clean build and package directories
+# Package all architectures
+package-all: package-deb package-rpm
+
+# Clean build directories
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(RPM_DIR)
+	rm -rf $(DEB_DIR)
+	rm -f $(BIN_DIR)/*
+	rm -f build/*
 
-# Default target
+# Build all, package, and clean
 all: clean build-all package-deb package-rpm
