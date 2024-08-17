@@ -25,3 +25,10 @@ go.work.sum
 .env
 
 # Binary files
+
+build/rpm/*
+build/deb/*
+build/bin/*
+!build/bin/.gitkeep
+*.rpm
+*.deb
